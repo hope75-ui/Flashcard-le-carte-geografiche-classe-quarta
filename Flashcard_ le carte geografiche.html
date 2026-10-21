@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flashcard: le carte geografiche</title>
+<!--
+=====================================================================
+COME PERSONALIZZARE QUESTO FILE
+1. Cerca "IMPOSTAZIONI": cambia titolo e sottotitolo.
+2. Cerca "CATEGORIE": cambia nomi e colori delle sezioni.
+3. Cerca "CARTE": ogni flashcard è un blocco { cat, q, a, art }.
+   - cat: sigla della categoria (vedi CATEGORIE)
+   - q:   domanda (fronte)
+   - a:   risposta (retro). Puoi usare <b>parola</b> per evidenziare.
+   - art: nome di un disegno già pronto (vedi ART) oppure una emoji
+   - img: (facoltativo) indirizzo di una tua immagine o foto, es. "foto/monti.jpg".
+          Se lo scrivi, sostituisce il disegno. Tieni la foto nella stessa cartella del file.
+4. Per aggiungere una carta copia un blocco e cambia i testi. Per toglierla cancellalo.
+=====================================================================
+-->
+<style>
+:root{
+  --carta:#fff8e7;
+  --inchiostro:#24344d;
+  --mare:#2ba3d9;
+  --sole:#ffc93c;
+  --prato:#5cb85c;
+  --roccia:#8a5a2b;
+  --corallo:#ff6b6b;
+  --viola:#8e6bd8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:"Trebuchet MS","Verdana",system-ui,sans-serif;
+  color:var(--inchiostro);
+  background:
+    radial-gradient(circle at 12% 18%, #ffe9a8 0 90px, transparent 91px),
+    radial-gradient(circle at 92% 82%, #bfe8ff 0 130px, transparent 131px),
+    var(--carta);
+  background-attachment:fixed;
+  padding:14px 14px 40px;
+}
+.wrap{max-width:760px;margin:0 auto}
+header{text-align:center;margin:6px 0 10px}
+h1{font-size:clamp(26px,6vw,40px);margin:0;letter-spacing:.5px;color:var(--roccia)}
+.sub{margin:4px 0 0;font-size:clamp(15px,3.6vw,18px)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0 10px}
+.chip{
+  border:3px solid var(--c);background:#fff;color:var(--inchiostro);
+  border-radius:999px;padding:7px 14px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;
+}
+.chip[aria-pressed="true"]{background:var(--c);color:#fff}
+.chip:focus-visible,.btn:focus-visible,.card:focus-visible{outline:4px solid var(--viola);outline-offset:3px}
+.bar{display:flex;align-items:center;gap:10px;margin:10px 4px}
+.track{flex:1;height:16px;border-radius:99px;background:#fff;border:3px solid var(--inchiostro);overflow:hidden}
+.fill{height:100%;width:0;background:var(--prato);transition:width .35s}
+.count{font-weight:700;white-space:nowrap}
+.scene{perspective:1400px;margin:10px 0}
+.card{
+  position:relative;width:100%;height:min(66vh,520px);min-height:430px;
+  cursor:pointer;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.3,.8,.3,1);
+  border-radius:28px;
+}
+.card.flip{transform:rotateY(180deg)}
+.face{
+  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:28px;border:5px solid var(--cc);background:#fff;
+  box-shadow:0 8px 0 var(--cc);
+  display:flex;flex-direction:column;align-items:center;padding:16px 18px;overflow:hidden;
+}
+.back{transform:rotateY(180deg);background:#fffdf3}
+.tag{
+  align-self:flex-start;background:var(--cc);color:#fff;font-weight:700;font-size:14px;
+  padding:4px 12px;border-radius:99px;
+}
+.art{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;margin:6px 0}
+.art svg,.art img{max-height:100%;max-width:100%;width:auto;height:100%}
+.art img{object-fit:contain;border-radius:16px}
+.art .emoji{font-size:clamp(70px,22vw,130px);line-height:1}
+.q{font-size:clamp(21px,5vw,28px);font-weight:800;text-align:center;margin:0 0 6px;line-height:1.25}
+.hint{font-size:14px;opacity:.65;margin-top:6px}
+.back .art{flex:0 0 auto;height:110px;margin:2px 0 6px}
+.ans{
+  font-size:clamp(18px,4.3vw,22px);line-height:1.5;text-align:left;width:100%;
+  overflow:auto;flex:1;padding:4px 6px;
+}
+.ans b{background:linear-gradient(transparent 55%, #ffe27a 55%);padding:0 2px}
+.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.btn{
+  border:none;border-radius:18px;padding:13px 20px;font:inherit;font-weight:800;font-size:17px;
+  color:#fff;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.25);
+}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
+.nav{background:var(--mare)}
+.ok{background:var(--prato)}
+.again{background:var(--corallo)}
+.mix{background:var(--viola)}
+.sw{background:var(--roccia)}
+.btn[hidden]{display:none}
+.status{text-align:center;min-height:26px;font-weight:700;margin-top:12px}
+.end{text-align:center;padding:30px 10px;font-size:22px;font-weight:800}
+@media (prefers-reduced-motion:reduce){.card,.fill{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="titolo"></h1>
+    <p class="sub" id="sottotitolo"></p>
+  </header>
+
+  <div class="chips" id="chips" role="group" aria-label="Scegli l'argomento"></div>
+
+  <div class="bar">
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <div class="count" id="count"></div>
+  </div>
+
+  <div class="scene" id="scene"></div>
+
+  <div class="controls">
+    <button class="btn nav" id="prev" aria-label="Carta precedente">← Indietro</button>
+    <button class="btn nav" id="flip">Gira la carta</button>
+    <button class="btn nav" id="next" aria-label="Carta successiva">Avanti →</button>
+  </div>
+  <div class="controls">
+    <button class="btn again" id="again" hidden>Da ripassare</button>
+    <button class="btn ok" id="know" hidden>Lo so!</button>
+  </div>
+  <div class="controls">
+    <button class="btn mix" id="mix">Mescola</button>
+    <button class="btn sw" id="mode">Parti dalla risposta: no</button>
+    <button class="btn nav" id="reset">Ricomincia</button>
+  </div>
+  <div class="status" id="status" aria-live="polite"></div>
+</div>
+
+<script>
+/* =====================  IMPOSTAZIONI  ===================== */
+const IMPOSTAZIONI = {
+  titolo: "Le carte geografiche",
+  sottotitolo: "Flashcard di geografia · classe quarta"
+};
+
+/* =====================  CATEGORIE  ======================== */
+const CATEGORIE = {
+  tipi:   { nome: "Tipi di carte",               colore: "#2ba3d9" },
+  colori: { nome: "I colori della carta fisica", colore: "#8a5a2b" },
+  carta:  { nome: "Com'è una carta",             colore: "#8e6bd8" },
+  punti:  { nome: "Punti cardinali",             colore: "#e0701a" },
+  grafici:{ nome: "Grafici e tabelle",           colore: "#3fa34d" }
+};
+
+/* =====================  DISEGNI (ART)  ==================== */
+const svg = (inner) => `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img">${inner}</svg>`;
+
+function fetta(cx, cy, r, da, a, colore){
+  const rad = d => (d - 90) * Math.PI / 180;
+  const x1 = cx + r*Math.cos(rad(da)), y1 = cy + r*Math.sin(rad(da));
+  const x2 = cx + r*Math.cos(rad(a)),  y2 = cy + r*Math.sin(rad(a));
+  const grande = (a - da) > 180 ? 1 : 0;
+  return `<path d="M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${grande} 1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${colore}" stroke="#fff" stroke-width="2"/>`;
+}
+const monte = (x,y,w,h,c,neve) => `<polygon points="${x},${y} ${x+w/2},${y-h} ${x+w},${y}" fill="${c}"/>` + (neve ? `<polygon points="${x+w/2-w*0.14},${y-h*0.72} ${x+w/2},${y-h} ${x+w/2+w*0.14},${y-h*0.72}" fill="#fff"/>` : "");
+
+const ART = {
+  carte: svg(`
+    <rect x="10" y="22" width="100" height="72" rx="8" fill="#5cb85c" transform="rotate(-8 60 58)"/>
+    <rect x="45" y="18" width="100" height="72" rx="8" fill="#ffc93c" transform="rotate(5 95 54)"/>
+    <rect x="80" y="30" width="100" height="72" rx="8" fill="#2ba3d9" transform="rotate(-3 130 66)"/>
+    <text x="130" y="76" font-size="40" text-anchor="middle">🗺️</text>`),
+
+  quattro: svg(`
+    <g font-size="12" font-weight="700" text-anchor="middle" fill="#fff">
+      <rect x="8" y="20" width="42" height="80" rx="8" fill="#8a5a2b"/><text x="29" y="64" font-size="11">fisiche</text>
+      <rect x="54" y="20" width="42" height="80" rx="8" fill="#ff6b6b"/><text x="75" y="64" font-size="10">politiche</text>
+      <rect x="100" y="20" width="42" height="80" rx="8" fill="#3fa34d"/><text x="121" y="58" font-size="10">fisico-</text><text x="121" y="70" font-size="10">politiche</text>
+      <rect x="146" y="20" width="46" height="80" rx="8" fill="#8e6bd8"/><text x="169" y="64" font-size="10">tematiche</text>
+    </g>`),
+
+  fedele: svg(`
+    <rect x="15" y="15" width="70" height="90" rx="8" fill="#bfe8ff" stroke="#24344d" stroke-width="3"/>
+    <path d="M25 80 Q40 40 55 60 T75 35 L75 95 L25 95Z" fill="#5cb85c"/>
+    <rect x="115" y="15" width="70" height="90" rx="8" fill="#bfe8ff" stroke="#24344d" stroke-width="3"/>
+    <path d="M125 80 Q140 40 155 60 T175 35 L175 95 L125 95Z" fill="#5cb85c"/>
+    <text x="100" y="68" font-size="30" text-anchor="middle" font-weight="800" fill="#24344d">=</text>`),
+
+  alto: svg(`
+    <rect x="0" y="0" width="200" height="120" fill="#bfe8ff"/>
+    <text x="100" y="42" font-size="38" text-anchor="middle">🦅</text>
+    <path d="M100 52 L40 112 M100 52 L160 112" stroke="#24344d" stroke-width="2" stroke-dasharray="5 4"/>
+    <g>
+      <rect x="40" y="90" width="30" height="22" fill="#5cb85c"/><rect x="70" y="90" width="30" height="22" fill="#ffc93c"/>
+      <rect x="100" y="90" width="30" height="22" fill="#5cb85c"/><rect x="130" y="90" width="30" height="22" fill="#2ba3d9"/>
+      <rect x="55" y="68" width="40" height="22" fill="#8a5a2b"/><rect x="95" y="68" width="40" height="22" fill="#5cb85c"/>
+    </g>`),
+
+  fisica: svg(`
+    <rect width="200" height="120" fill="#bfe8ff"/>
+    <path d="M20 40 Q60 10 110 30 Q170 25 180 70 Q150 105 90 100 Q30 100 20 40Z" fill="#5cb85c"/>
+    <path d="M60 50 Q90 30 120 48 Q110 70 75 66Z" fill="#ffc93c"/>
+    <path d="M80 50 Q96 42 108 50 Q100 60 86 58Z" fill="#8a5a2b"/>
+    <path d="M118 48 Q130 70 128 100" stroke="#2ba3d9" stroke-width="4" fill="none"/>`),
+
+  scala: svg(`
+    <defs><linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#2ba3d9"/><stop offset=".2" stop-color="#5cb85c"/>
+      <stop offset=".4" stop-color="#ffc93c"/><stop offset=".6" stop-color="#c58a3c"/><stop offset="1" stop-color="#5a3512"/>
+    </linearGradient></defs>
+    <rect x="10" y="38" width="180" height="34" rx="10" fill="url(#g)" stroke="#24344d" stroke-width="3"/>
+    <g font-size="11" font-weight="700" fill="#24344d" text-anchor="middle">
+      <text x="30" y="92">acqua</text><text x="68" y="92">pianura</text><text x="108" y="92">collina</text><text x="165" y="92">montagna</text>
+    </g>
+    <text x="100" y="24" font-size="12" text-anchor="middle" fill="#24344d" font-weight="700">sempre più alto →</text>`),
+
+  marrone: svg(`
+    <rect width="200" height="120" fill="#d7ecf7"/>
+    ${monte(10,105,100,70,"#5a3512",true)}${monte(70,105,120,90,"#8a5a2b",true)}${monte(40,105,70,45,"#a9763a",false)}`),
+
+  giallo: svg(`
+    <rect width="200" height="120" fill="#d7ecf7"/>
+    <path d="M0 105 Q40 45 80 100 Q120 40 170 100 L200 105Z" fill="#ffc93c"/>
+    <circle cx="165" cy="25" r="14" fill="#ffe27a"/>`),
+
+  verde: svg(`
+    <rect width="200" height="120" fill="#d7ecf7"/>
+    <rect y="70" width="200" height="50" fill="#5cb85c"/>
+    <g fill="#ff6b6b"><circle cx="30" cy="95" r="4"/><circle cx="80" cy="105" r="4"/><circle cx="140" cy="92" r="4"/><circle cx="175" cy="108" r="4"/></g>
+    <circle cx="165" cy="28" r="14" fill="#ffc93c"/>`),
+
+  azzurro: svg(`
+    <rect width="200" height="120" fill="#2ba3d9"/>
+    <g stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round">
+      <path d="M10 40 q10 -12 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0"/>
+      <path d="M0 70 q10 -12 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0"/>
+      <path d="M10 100 q10 -12 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0"/>
+    </g>`),
+
+  politica: svg(`
+    <rect width="200" height="120" fill="#fff"/>
+    <path d="M20 20 L90 15 L100 60 L40 70Z" fill="#ffb3b3" stroke="#24344d" stroke-width="3"/>
+    <path d="M90 15 L170 25 L160 75 L100 60Z" fill="#b8e0a8" stroke="#24344d" stroke-width="3"/>
+    <path d="M40 70 L100 60 L160 75 L130 110 L50 105Z" fill="#ffe27a" stroke="#24344d" stroke-width="3"/>
+    <circle cx="70" cy="42" r="5" fill="#24344d"/><circle cx="130" cy="50" r="5" fill="#24344d"/><circle cx="95" cy="88" r="5" fill="#24344d"/>`),
+
+  uomo: svg(`
+    <rect width="200" height="120" fill="#fff"/>
+    <text x="40" y="65" font-size="42" text-anchor="middle">🏠</text>
+    <text x="100" y="65" font-size="42" text-anchor="middle">🏭</text>
+    <text x="160" y="65" font-size="42" text-anchor="middle">🌉</text>
+    <text x="100" y="105" font-size="12" font-weight="700" text-anchor="middle" fill="#24344d">fatto dall'essere umano</text>`),
+
+  tematica: svg(`
+    <rect width="200" height="120" fill="#fff"/>
+    <text x="35" y="55" font-size="36" text-anchor="middle">☀️</text>
+    <text x="85" y="55" font-size="36" text-anchor="middle">🌾</text>
+    <text x="135" y="55" font-size="36" text-anchor="middle">🏭</text>
+    <text x="175" y="55" font-size="36" text-anchor="middle">🌳</text>
+    <g font-size="10" font-weight="700" fill="#24344d" text-anchor="middle">
+      <text x="35" y="85">clima</text><text x="85" y="85">agricoltura</text><text x="135" y="85">industria</text><text x="175" y="85">parchi</text>
+    </g>`),
+
+  ridotta: svg(`
+    <rect x="15" y="12" width="100" height="96" rx="8" fill="#bfe8ff" stroke="#24344d" stroke-width="3"/>
+    <path d="M30 90 Q50 30 75 60 T105 25 L105 98 L30 98Z" fill="#5cb85c"/>
+    <path d="M125 60 L150 60" stroke="#24344d" stroke-width="4"/><polygon points="150,52 164,60 150,68" fill="#24344d"/>
+    <rect x="172" y="48" width="22" height="22" rx="4" fill="#bfe8ff" stroke="#24344d" stroke-width="2"/>
+    <path d="M176 66 Q182 52 186 58 T191 52 L191 68 L176 68Z" fill="#5cb85c"/>`),
+
+  approssimata: svg(`
+    <circle cx="55" cy="60" r="42" fill="#2ba3d9"/>
+    <path d="M30 45 Q50 30 65 50 Q50 75 30 65Z M62 70 Q80 62 90 78 Q78 95 62 88Z" fill="#5cb85c"/>
+    <path d="M110 60 L135 60" stroke="#24344d" stroke-width="4"/><polygon points="135,52 149,60 135,68" fill="#24344d"/>
+    <rect x="152" y="25" width="40" height="70" rx="6" fill="#bfe8ff" stroke="#24344d" stroke-width="3"/>
+    <path d="M158 50 Q168 40 175 52 Q170 65 160 62Z" fill="#5cb85c"/>`),
+
+  simbolica: svg(`
+    <rect x="8" y="10" width="110" height="100" rx="8" fill="#fff" stroke="#24344d" stroke-width="3"/>
+    <text x="30" y="45" font-size="22">⛰️</text><text x="62" y="80" font-size="22">🏭</text><text x="85" y="40" font-size="22">🌲</text>
+    <rect x="128" y="10" width="64" height="100" rx="8" fill="#fff4c2" stroke="#24344d" stroke-width="3"/>
+    <text x="160" y="28" font-size="11" font-weight="800" text-anchor="middle" fill="#24344d">LEGENDA</text>
+    <text x="136" y="54" font-size="16">⛰️</text><text x="136" y="78" font-size="16">🏭</text><text x="136" y="102" font-size="16">🌲</text>
+    <g stroke="#24344d" stroke-width="2"><path d="M162 48 h24"/><path d="M162 72 h24"/><path d="M162 96 h24"/></g>`),
+
+  nordalto: svg(`
+    <rect x="45" y="8" width="110" height="104" rx="8" fill="#bfe8ff" stroke="#24344d" stroke-width="3"/>
+    <path d="M65 95 Q90 55 115 75 T140 48 L140 102 L65 102Z" fill="#5cb85c"/>
+    <polygon points="100,14 91,36 109,36" fill="#ff6b6b"/>
+    <text x="100" y="54" font-size="14" font-weight="800" text-anchor="middle" fill="#24344d">Nord</text>`),
+
+  bussola: svg(`
+    <circle cx="100" cy="62" r="46" fill="#fff" stroke="#24344d" stroke-width="4"/>
+    <polygon points="100,22 91,62 109,62" fill="#ff6b6b"/>
+    <polygon points="100,102 91,62 109,62" fill="#2ba3d9"/>
+    <circle cx="100" cy="62" r="5" fill="#24344d"/>
+    <g font-size="12" font-weight="800" text-anchor="middle" fill="#24344d">
+      <text x="100" y="12">Nord</text><text x="100" y="119">Sud</text><text x="160" y="66">Est</text><text x="38" y="66">Ovest</text>
+    </g>`),
+
+  est: svg(`
+    <rect width="200" height="120" fill="#ffd9a0"/>
+    <circle cx="165" cy="85" r="26" fill="#ffc93c"/>
+    <rect y="85" width="200" height="35" fill="#5cb85c"/>
+    <text x="165" y="112" font-size="14" font-weight="800" text-anchor="middle" fill="#fff">Est</text>
+    <text x="55" y="50" font-size="13" font-weight="700" fill="#24344d">il Sole sorge</text>
+    <text x="55" y="68" font-size="13" font-weight="700" fill="#24344d">ogni mattina</text>`),
+
+  ovest: svg(`
+    <rect width="200" height="120" fill="#ff9b7a"/>
+    <circle cx="35" cy="85" r="26" fill="#ffc93c"/>
+    <rect y="85" width="200" height="35" fill="#3d8f4c"/>
+    <text x="35" y="112" font-size="14" font-weight="800" text-anchor="middle" fill="#fff">Ovest</text>
+    <text x="85" y="50" font-size="13" font-weight="700" fill="#24344d">il Sole tramonta</text>`),
+
+  sud: svg(`
+    <rect width="200" height="120" fill="#8fd3ff"/>
+    <circle cx="100" cy="30" r="24" fill="#ffc93c"/>
+    <rect y="85" width="200" height="35" fill="#5cb85c"/>
+    <text x="100" y="112" font-size="14" font-weight="800" text-anchor="middle" fill="#fff">Sud</text>
+    <text x="100" y="72" font-size="12" font-weight="700" text-anchor="middle" fill="#24344d">il Sole a mezzogiorno</text>`),
+
+  nord: svg(`
+    <rect width="200" height="120" fill="#1f2d52"/>
+    <text x="60" y="55" font-size="40" text-anchor="middle">🌙</text>
+    <g fill="#ffe27a"><circle cx="120" cy="25" r="2.5"/><circle cx="150" cy="50" r="2"/><circle cx="170" cy="20" r="3"/><circle cx="130" cy="70" r="2"/></g>
+    <rect y="95" width="200" height="25" fill="#2f5b3a"/>
+    <text x="100" y="113" font-size="14" font-weight="800" text-anchor="middle" fill="#fff">Nord</text>
+    <text x="100" y="86" font-size="12" font-weight="700" text-anchor="middle" fill="#fff">mezzanotte: opposto al Sud</text>`),
+
+  quattrop: svg(`
+    <circle cx="100" cy="60" r="44" fill="#fff" stroke="#24344d" stroke-width="4"/>
+    <path d="M100 34 V86 M48 60 H152" stroke="#e0701a" stroke-width="4"/>
+    <g font-size="15" font-weight="800" text-anchor="middle" fill="#24344d">
+      <text x="100" y="26">N</text><text x="100" y="108">S</text><text x="166" y="66">E</text><text x="34" y="66">O</text>
+    </g>`),
+
+  grafici: svg(`
+    <rect x="10" y="12" width="85" height="96" rx="8" fill="#fff" stroke="#24344d" stroke-width="3"/>
+    ${fetta(52,60,32,0,126,"#8a5a2b")}${fetta(52,60,32,126,277.2,"#ffc93c")}${fetta(52,60,32,277.2,360,"#5cb85c")}
+    <rect x="105" y="12" width="85" height="96" rx="8" fill="#fff" stroke="#24344d" stroke-width="3"/>
+    <rect x="118" y="60" width="16" height="38" fill="#8a5a2b"/><rect x="142" y="48" width="16" height="50" fill="#ffc93c"/><rect x="166" y="70" width="16" height="28" fill="#5cb85c"/>`),
+
+  areogramma: svg(`
+    ${fetta(60,60,50,0,126,"#8a5a2b")}${fetta(60,60,50,126,277.2,"#ffc93c")}${fetta(60,60,50,277.2,360,"#5cb85c")}
+    <g font-size="11" font-weight="800" fill="#24344d">
+      <rect x="125" y="22" width="12" height="12" fill="#8a5a2b"/><text x="142" y="32">montagna 35%</text>
+      <rect x="125" y="52" width="12" height="12" fill="#ffc93c"/><text x="142" y="62">collina 42%</text>
+      <rect x="125" y="82" width="12" height="12" fill="#5cb85c"/><text x="142" y="92">pianura 23%</text>
+    </g>`),
+
+  barre: svg(`
+    <path d="M25 10 V100 H190" stroke="#24344d" stroke-width="3" fill="none"/>
+    <rect x="45" y="48" width="30" height="52" fill="#8a5a2b"/><rect x="95" y="34" width="30" height="66" fill="#ffc93c"/><rect x="145" y="64" width="30" height="36" fill="#5cb85c"/>
+    <g font-size="11" font-weight="700" text-anchor="middle" fill="#24344d">
+      <text x="60" y="114">montagna</text><text x="110" y="114">collina</text><text x="160" y="114">pianura</text>
+    </g>`),
+
+  tabella: svg(`
+    <rect x="10" y="20" width="180" height="80" rx="8" fill="#fff" stroke="#24344d" stroke-width="3"/>
+    <rect x="10" y="20" width="180" height="40" rx="8" fill="#c9eccb"/>
+    <path d="M10 60 H190 M118 20 V100" stroke="#24344d" stroke-width="2"/>
+    <g font-size="11" font-weight="700" fill="#24344d">
+      <text x="16" y="44">Superficie montuosa</text><text x="124" y="44">106275 km²</text>
+      <text x="16" y="84">Superficie collinare</text><text x="124" y="84">125790 km²</text>
+    </g>`)
+};
+
+/* =====================  CARTE  ============================ */
+const CARTE = [
+  /* ---- Tipi di carte ---- */
+  { cat:"tipi", art:"carte",
+    q:"Perché esistono tanti tipi di carte geografiche?",
+    a:"Non è possibile rappresentare con <b>una sola carta</b> tutti gli elementi che ci sono su un territorio. Per questo i cartografi e le cartografe hanno realizzato <b>diversi tipi di carte</b>, che si differenziano tra loro <b>in base alle informazioni</b> che forniscono." },
+  { cat:"tipi", art:"quattro",
+    q:"Quali tipi di carte esistono?",
+    a:"Le carte possono essere <b>fisiche</b>, <b>politiche</b>, <b>fisico-politiche</b> o <b>tematiche</b>. Ogni tipo mostra elementi diversi del territorio." },
+  { cat:"tipi", art:"fedele",
+    q:"Qual è lo scopo di una carta geografica?",
+    a:"Lo scopo è dare una <b>rappresentazione del territorio</b> che sia <b>la più fedele possibile alla realtà</b>." },
+  { cat:"tipi", art:"alto",
+    q:"Come si deve rappresentare il territorio per fare una carta geografica?",
+    a:"Occorre rappresentare un territorio <b>visto dall'alto</b>. In questo modo è possibile osservare una <b>porzione di territorio più vasta</b>." },
+  { cat:"tipi", art:"fisica",
+    q:"Che cosa rappresenta una carta fisica?",
+    a:"Lo scopo delle carte fisiche è rappresentare gli <b>elementi naturali di un territorio</b>: <b>monti, mari, fiumi</b>... Le carte fisiche utilizzano i <b>colori</b>." },
+  { cat:"tipi", art:"politica",
+    q:"Che cosa rappresenta una carta politica?",
+    a:"Le carte politiche rappresentano il territorio dal <b>punto di vista antropico</b>, cioè mettono in evidenza l'intervento dell'essere umano. Usando <b>simboli e colori</b>, indicano i <b>confini</b>, gli <b>Stati</b>, le <b>regioni</b> di uno Stato, le <b>città</b>." },
+  { cat:"tipi", art:"uomo",
+    q:"Che cosa significa la parola «antropico»?",
+    a:"<b>Antropico</b> è tutto ciò che riguarda l'<b>intervento dell'essere umano</b>. Per questo le carte politiche, che mostrano confini, Stati e città, hanno un punto di vista antropico." },
+  { cat:"tipi", art:"tematica",
+    q:"Che cosa rappresenta una carta tematica?",
+    a:"Le carte tematiche rappresentano con <b>colori o simboli</b> un <b>«tema»</b> relativo a una particolare zona geografica. Ad esempio, possono mettere in evidenza il <b>clima</b>, la <b>produzione agricola o industriale</b>, la presenza di <b>parchi naturali</b>." },
+  { cat:"tipi", art:"carte",
+    q:"Le carte geografiche rappresentano sempre le stesse cose?",
+    a:"No. Le carte geografiche rappresentano <b>diversi elementi del territorio</b>. La carta fisica mostra gli elementi naturali, la carta politica l'intervento dell'essere umano, la carta tematica un tema preciso." },
+
+  /* ---- Colori della carta fisica ---- */
+  { cat:"colori", art:"scala",
+    q:"Perché le carte fisiche usano i colori?",
+    a:"I colori ci dicono com'è fatto il territorio: <b>marrone</b> per le zone montuose, <b>giallo</b> per le colline, <b>verde</b> per la pianura, <b>azzurro</b> per le acque." },
+  { cat:"colori", art:"marrone",
+    q:"Che cosa ci dice il colore marrone su una carta fisica?",
+    a:"Il <b>marrone</b> e le sue sfumature ci dicono immediatamente che siamo in presenza di una <b>zona montuosa</b>. Più il marrone è <b>scuro</b>, più la montagna è <b>alta</b>." },
+  { cat:"colori", art:"giallo",
+    q:"Che cosa succede quando il marrone diventa sempre più chiaro fino al giallo?",
+    a:"Man mano che il marrone diventa <b>più chiaro</b> e arriva a essere <b>giallo</b>, significa che la montagna è <b>più bassa</b>, fino a diventare <b>collina</b>." },
+  { cat:"colori", art:"verde",
+    q:"Che cosa indica il colore verde su una carta fisica?",
+    a:"Il <b>verde</b> indica la <b>pianura</b>." },
+  { cat:"colori", art:"azzurro",
+    q:"Che cosa identifica il colore azzurro su una carta fisica?",
+    a:"L'<b>azzurro</b> identifica le <b>acque</b>." },
+
+  /* ---- Com'è una carta ---- */
+  { cat:"carta", art:"ridotta",
+    q:"Perché la carta geografica è «ridotta»?",
+    a:"È <b>ridotta</b> perché lo spazio deve essere <b>ridimensionato</b>, <b>rispettando le proporzioni</b> tra i vari elementi." },
+  { cat:"carta", art:"approssimata",
+    q:"Perché la carta geografica è «approssimata»?",
+    a:"È <b>approssimata</b> perché deve rappresentare una <b>superficie curva</b> su una <b>superficie piana</b> (il foglio)." },
+  { cat:"carta", art:"simbolica",
+    q:"Perché la carta geografica è «simbolica»? A che cosa serve la legenda?",
+    a:"È <b>simbolica</b> perché si usano <b>simboli convenzionali</b> al posto degli elementi reali. Il significato dei simboli è riportato nella <b>legenda</b>, affinché essi possano essere <b>letti in modo corretto</b>." },
+  { cat:"carta", art:"nordalto",
+    q:"Come è solitamente orientata una carta geografica?",
+    a:"È solitamente <b>orientata con il Nord in alto</b>, perché sia di più <b>facile lettura</b>." },
+
+  /* ---- Punti cardinali ---- */
+  { cat:"punti", art:"quattrop",
+    q:"Che cosa sono i punti cardinali? Quanti sono?",
+    a:"Per leggere una carta geografica è importante saperci orientare su di essa. I <b>punti cardinali</b> sono i punti di <b>riferimento universali</b>, sia nella realtà sia sulle carte geografiche. Sono <b>quattro</b>: Est, Ovest, Sud, Nord." },
+  { cat:"punti", art:"est",
+    q:"Che cos'è l'Est?",
+    a:"<b>Est</b> (o <b>oriente</b> o <b>levante</b>) è il punto in cui <b>sorge il Sole</b> ogni mattina." },
+  { cat:"punti", art:"ovest",
+    q:"Che cos'è l'Ovest?",
+    a:"<b>Ovest</b> (o <b>occidente</b> o <b>ponente</b>) è il punto in cui il Sole <b>tramonta</b>." },
+  { cat:"punti", art:"sud",
+    q:"Che cos'è il Sud?",
+    a:"<b>Sud</b> (o <b>mezzogiorno</b>) indica la <b>posizione del Sole a mezzogiorno</b>." },
+  { cat:"punti", art:"nord",
+    q:"Che cos'è il Nord?",
+    a:"<b>Nord</b> (o <b>mezzanotte</b>) è la direzione <b>opposta al Sud</b>." },
+  { cat:"punti", art:"bussola",
+    q:"Che cosa indica sempre la bussola?",
+    a:"La bussola indica <b>sempre il Nord</b>." },
+
+  /* ---- Grafici e tabelle ---- */
+  { cat:"grafici", art:"grafici",
+    q:"A che cosa servono i grafici e le tabelle?",
+    a:"I geografi e le geografe usano anche <b>grafici</b> e <b>tabelle</b> per comunicare vari <b>dati del territorio</b>, soprattutto quelli relativi ad argomenti che devono essere <b>misurati</b>. Per esempio, la <b>morfologia</b> del territorio italiano può essere rappresentata in vari modi." },
+  { cat:"grafici", art:"fisica",
+    q:"Che cosa mostra la carta fisica del territorio italiano? Che cosa non ci fa capire bene?",
+    a:"Mostra <b>dove sono dislocate</b> montagne, colline, pianure. Ci fa però <b>solo intuire</b> quali siano le <b>proporzioni</b> tra un tipo di territorio e un altro." },
+  { cat:"grafici", art:"barre",
+    q:"Che cosa forniscono l'areogramma e il diagramma a barre?",
+    a:"L'<b>areogramma</b> e il <b>diagramma a barre</b> forniscono l'<b>esatta proporzione</b> per <b>confrontare i dati</b>." },
+  { cat:"grafici", art:"areogramma",
+    q:"Guarda l'areogramma: quale tipo di territorio ha la percentuale più alta? E quale la più bassa?",
+    a:"Nell'areogramma la <b>collina</b> ha la percentuale più alta: <b>42%</b>. La <b>montagna</b> è al <b>35%</b>. La <b>pianura</b> ha la percentuale più bassa: <b>23%</b>." },
+  { cat:"grafici", art:"tabella",
+    q:"Che cosa contengono le tabelle? Che cosa non rendono chiaro?",
+    a:"Le tabelle contengono <b>numeri precisi</b>, ma <b>non rendono visibilmente chiara la proporzione</b>. Esempio: superficie montuosa <b>106275 km²</b>, superficie collinare <b>125790 km²</b>." }
+];
+
+/* =====================  FINE DELLA PARTE DA MODIFICARE  ===================== */
+
+const $ = (id) => document.getElementById(id);
+const tutte = CARTE.map((c, i) => ({ ...c, id: i }));
+let filtro = "tutte";
+let mazzo = [];
+let pos = 0;
+const conosciute = new Set();
+const daRipassare = new Set();
+let partiRisposta = false;
+
+$("titolo").textContent = IMPOSTAZIONI.titolo;
+$("sottotitolo").textContent = IMPOSTAZIONI.sottotitolo;
+document.title = IMPOSTAZIONI.titolo;
+
+function disegno(c){
+  if (c.img) return `<img src="${c.img}" alt="">`;
+  if (c.art && ART[c.art]) return ART[c.art];
+  if (c.art) return `<div class="emoji">${c.art}</div>`;
+  return `<div class="emoji">🗺️</div>`;
+}
+
+function costruisciChips(){
+  const box = $("chips");
+  box.innerHTML = "";
+  const voci = [["tutte", {nome:"Tutte", colore:"#24344d"}], ...Object.entries(CATEGORIE)];
+  voci.forEach(([k, v]) => {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.style.setProperty("--c", v.colore);
+    b.textContent = v.nome;
+    b.setAttribute("aria-pressed", String(k === filtro));
+    b.onclick = () => { filtro = k; costruisciChips(); costruisciMazzo(); };
+    box.appendChild(b);
+  });
+}
+
+function costruisciMazzo(rimescola){
+  mazzo = tutte.filter(c => filtro === "tutte" || c.cat === filtro);
+  if (rimescola){
+    for (let i = mazzo.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [mazzo[i], mazzo[j]] = [mazzo[j], mazzo[i]];
+    }
+  }
+  pos = 0;
+  mostra();
+}
+
+function mostra(){
+  const scena = $("scene");
+  if (!mazzo.length){
+    scena.innerHTML = `<div class="end">Nessuna carta in questa sezione.</div>`;
+    $("count").textContent = ""; aggiornaBottoni(); return;
+  }
+  const c = mazzo[pos];
+  const cat = CATEGORIE[c.cat] || { nome: c.cat, colore: "#2ba3d9" };
+  scena.innerHTML = `
+    <div class="card" id="card" tabindex="0" role="button" aria-label="Gira la carta" style="--cc:${cat.colore}">
+      <div class="face front">
+        <span class="tag">${cat.nome}</span>
+        <div class="art">${disegno(c)}</div>
+        <p class="q">${c.q}</p>
+        <span class="hint">Tocca la carta per vedere la risposta</span>
+      </div>
+      <div class="face back">
+        <span class="tag">${cat.nome}</span>
+        <div class="art">${disegno(c)}</div>
+        <div class="ans">${c.a}</div>
+      </div>
+    </div>`;
+  const card = $("card");
+  card.onclick = girare;
+  card.onkeydown = (e) => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); girare(); } };
+  if (partiRisposta) card.classList.add("flip");
+  aggiorna();
+}
+
+function girare(){
+  const card = $("card");
+  if (card) card.classList.toggle("flip");
+  aggiornaBottoni();
+}
+
+function aggiornaBottoni(){
+  const card = $("card");
+  const retro = !!card && card.classList.contains("flip");
+  $("know").hidden = !retro;
+  $("again").hidden = !retro;
+}
+
+function aggiorna(){
+  const tot = mazzo.length;
+  const fatte = mazzo.filter(c => conosciute.has(c.id)).length;
+  const rip = mazzo.filter(c => daRipassare.has(c.id)).length;
+  $("count").textContent = tot ? `Carta ${pos + 1} di ${tot}` : "";
+  $("fill").style.width = tot ? (fatte / tot * 100) + "%" : "0";
+  $("status").textContent = tot ? `Le so: ${fatte} · Da ripassare: ${rip}` : "";
+  aggiornaBottoni();
+}
+
+function vai(d){
+  if (!mazzo.length) return;
+  pos = (pos + d + mazzo.length) % mazzo.length;
+  mostra();
+}
+
+$("next").onclick = () => vai(1);
+$("prev").onclick = () => vai(-1);
+$("flip").onclick = girare;
+$("mix").onclick = () => costruisciMazzo(true);
+$("mode").onclick = () => {
+  partiRisposta = !partiRisposta;
+  $("mode").textContent = "Parti dalla risposta: " + (partiRisposta ? "sì" : "no");
+  mostra();
+};
+$("reset").onclick = () => { conosciute.clear(); daRipassare.clear(); costruisciMazzo(); };
+$("know").onclick = () => {
+  const c = mazzo[pos];
+  conosciute.add(c.id); daRipassare.delete(c.id);
+  if (mazzo.every(x => conosciute.has(x.id))){
+    $("scene").innerHTML = `<div class="end">🎉 Bravo! Hai imparato tutte le carte di questa sezione!</div>`;
+    aggiorna();
+  } else vai(1);
+};
+$("again").onclick = () => {
+  const c = mazzo[pos];
+  daRipassare.add(c.id); conosciute.delete(c.id); vai(1);
+};
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowRight") vai(1);
+  if (e.key === "ArrowLeft") vai(-1);
+});
+
+costruisciChips();
+costruisciMazzo();
+</script>
+</body>
+</html>
